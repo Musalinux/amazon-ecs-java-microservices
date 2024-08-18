@@ -369,20 +369,32 @@ def delete_roles(task_role_policy=None, ecs_role_policy='arn:aws:iam::aws:policy
 def create_roles():
     iam_client = boto3.client('iam')
     roles = [
-        {"name": "PetECSServiceRole", "policy": "arn:aws:iam::aws:policy/AmazonEC2ContainerServiceFullAccess"},
-        {"name": "PetECSTaskRole", "policy": None},  # Assuming no policy needed or it would be provided
-        {"name": "PetECSAgentRole", "policy": "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"}
+        {
+            "name": "PetECSServiceRole",
+            "policy": "arn:aws:iam::aws:policy/AmazonEC2ContainerServiceFullAccess",
+            "service": "ecs.amazonaws.com"  # Correct service name for ECS service role
+        },
+        {
+            "name": "PetECSTaskRole",
+            "policy": None,  # Assuming no specific policy needed
+            "service": "ecs-tasks.amazonaws.com"  # Correct service name for ECS task role
+        },
+        {
+            "name": "PetECSAgentRole",
+            "policy": "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role",
+            "service": "ec2.amazonaws.com"  # Correct service name for ECS agent role (EC2 instances)
+        }
     ]
     role_arns = {}
 
     for role in roles:
         try:
-            # Try to create the role
+            # Construct the assume role policy with the correct service principal
             assume_role_policy = json.dumps({
                 "Version": "2012-10-17",
                 "Statement": [{
                     "Effect": "Allow",
-                    "Principal": {"Service": f"{role['name'].lower().replace('role', 'amazonaws.com')}"}, # Adjust the service name accordingly
+                    "Principal": {"Service": role["service"]},
                     "Action": "sts:AssumeRole"
                 }]
             })
@@ -403,7 +415,9 @@ def create_roles():
             logger.info(f"Role {role['name']} already exists with ARN: {role_arn}")
 
         role_arns[role['name'].lower()] = role_arn
+
     return role_arns
+
 
 def docker_login_config():
     ecr_client = boto3.client('ecr')
