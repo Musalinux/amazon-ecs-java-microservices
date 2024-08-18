@@ -791,10 +791,10 @@ def main():
     logger.info("Mode: " + mode)
 
     if mode == 'setup':
-        setup_results = setup(project_name=project_name, service_list=service_list, region=us-east-1)
+        setup_results = setup(project_name=project_name, service_list=service_list, region=region)
         logger.info("Setup is complete your endpoint is http://"+setup_results)
     elif mode == 'cleanup':
-        cleanup_results = cleanup(project_name=project_name, service_list=service_list, region=us-east-1)
+        cleanup_results = cleanup(project_name=project_name, service_list=service_list, region=region)
     else:
         parser.print_help()
         raise Exception("Not supported mode")
