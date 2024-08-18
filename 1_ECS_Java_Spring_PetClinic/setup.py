@@ -421,25 +421,29 @@ def create_roles():
 
 def docker_login_config():
     ecr_client = boto3.client('ecr')
-    # Get latest authorization token and put it in ~/.docker/config.json
-    ecr_login_token = ecr_client.get_authorization_token().get('authorizationData')[0].get('authorizationToken').encode(
-        'utf-8')
-    hostname = ecr_client.get_authorization_token().get('authorizationData')[0]['proxyEndpoint'].encode('utf-8')[8:]
+    # Get the latest authorization token and configure Docker login
+    auth_data = ecr_client.get_authorization_token()['authorizationData'][0]
+    auth_token = base64.b64decode(auth_data['authorizationToken']).decode('utf-8')
+    username, password = auth_token.split(':')
+    registry = auth_data['proxyEndpoint']
 
     home = expanduser("~")
-    filename = home + '/.docker/config.json'
-    with open(filename, 'r+') as f:
-        data = json.load(f)
-        data['auths'] = {
-            hostname: {
-                "auth": ecr_login_token
+    docker_config_path = os.path.join(home, '.docker', 'config.json')
+    docker_config = {
+        "auths": {
+            registry: {
+                "auth": base64.b64encode(f"{username}:{password}".encode('utf-8')).decode('utf-8')
             }
         }
-        #data['auths'][hostname]['auth'] = ecr_login_token
-        # logger.info('Writing docker configuration as '+str(data)
-        f.seek(0)
-        f.write(json.dumps(data))
-        f.truncate()
+    }
+
+    # Write the Docker configuration file
+    os.makedirs(os.path.dirname(docker_config_path), exist_ok=True)
+    with open(docker_config_path, 'w') as f:
+        json.dump(docker_config, f, indent=4)
+
+    logger.info("Docker login config updated.")
+
 
 
 def setup_securitygroups_permission(ecs_security_group, elb_security_group):
@@ -787,10 +791,10 @@ def main():
     logger.info("Mode: " + mode)
 
     if mode == 'setup':
-        setup_results = setup(project_name=project_name, service_list=service_list, region=region)
+        setup_results = setup(project_name=project_name, service_list=service_list, region=us-east-1)
         logger.info("Setup is complete your endpoint is http://"+setup_results)
     elif mode == 'cleanup':
-        cleanup_results = cleanup(project_name=project_name, service_list=service_list, region=region)
+        cleanup_results = cleanup(project_name=project_name, service_list=service_list, region=us-east-1)
     else:
         parser.print_help()
         raise Exception("Not supported mode")
