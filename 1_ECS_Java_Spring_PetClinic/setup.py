@@ -340,7 +340,7 @@ def create_ecs_cluster_mysql(stack_name, stack_name_ecs_cluster, vpc_id, subnet1
     return my_sql_options
 
 
-def delete_roles(task_role_policy=None, ecs_role_policy='arn:aws:iam::aws:policy/AmazonEC2ContainerServiceFullAccess',
+def delete_roles(task_role_policy=None, ecs_role_policy='arn:aws:iam::aws:policy/AmazonECS_FullAccess',
                  ecs_agent_role_policy='arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role'):
     iam_client = boto3.client('iam')
     iam_client.detach_role_policy(
@@ -371,7 +371,7 @@ def create_roles():
     roles = [
         {
             "name": "PetECSServiceRole",
-            "policy": "arn:aws:iam::aws:policy/AmazonEC2ContainerServiceFullAccess",
+            "policy": "arn:aws:iam::aws:policy/AmazonECS_FullAccess",
             "service": "ecs.amazonaws.com"  # Correct service name for ECS service role
         },
         {
