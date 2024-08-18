@@ -7,6 +7,7 @@ import time
 import uuid
 from os.path import expanduser
 from random import randint
+import base64  
 
 import boto3
 
