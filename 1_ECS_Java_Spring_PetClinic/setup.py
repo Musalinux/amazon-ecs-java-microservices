@@ -366,109 +366,44 @@ def delete_roles(task_role_policy=None, ecs_role_policy='arn:aws:iam::aws:policy
     logger.info("Roles deleted")
 
 
-def create_roles(task_role_policy=None, ecs_role_policy='arn:aws:iam::aws:policy/AmazonEC2ContainerServiceFullAccess',
-                 ecs_agent_role_policy='arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role'):
+def create_roles():
     iam_client = boto3.client('iam')
-    # Create task role using an empty policy
-    try:
-        task_assume_policy = {
-            'Statement': [
-                {
-                    'Principal': {
-                        'Service': ['ecs-tasks.amazonaws.com']
-                    },
-                    'Effect': 'Allow',
-                    'Action': ['sts:AssumeRole']
-                },
-            ]
-        }
+    roles = [
+        {"name": "PetECSServiceRole", "policy": "arn:aws:iam::aws:policy/AmazonEC2ContainerServiceFullAccess"},
+        {"name": "PetECSTaskRole", "policy": None},  # Assuming no policy needed or it would be provided
+        {"name": "PetECSAgentRole", "policy": "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"}
+    ]
+    role_arns = {}
 
-        ecs_assume_policy = {
-            'Statement': [
-                {
-                    'Principal': {
-                        'Service': ['ecs.amazonaws.com']
-                    },
-                    'Effect': 'Allow',
-                    'Action': ['sts:AssumeRole']
-                },
-            ]
-        }
-
-        ecsagent_assume_policy = {
-            'Statement': [
-                {
-                    'Principal': {
-                        'Service': ['ec2.amazonaws.com']
-                    },
-                    'Effect': 'Allow',
-                    'Action': ['sts:AssumeRole']
-                },
-            ]
-        }
-
-        create_ecs_role_response = iam_client.create_role(
-            Path='/',
-            RoleName='PetECSServiceRole',
-            AssumeRolePolicyDocument=json.dumps(ecs_assume_policy)
-        )
-        ecs_role_arn = create_ecs_role_response['Role']['Arn']
-        iam_client.attach_role_policy(
-            RoleName='PetECSServiceRole',
-            PolicyArn=ecs_role_policy
-        )
-        logger.info("ECS Service Role Create: " + ecs_role_arn)
-        time.sleep(1)
-
-        create_task_role_response = iam_client.create_role(
-            Path='/',
-            RoleName='PetECSTaskRole',
-            AssumeRolePolicyDocument=json.dumps(task_assume_policy)
-        )
-        time.sleep(1)
-        task_role_arn = create_task_role_response['Role']['Arn']
-        if task_role_policy:
-            iam_client.attach_role_policy(
-                RoleName='PetECSTaskRole',
-                PolicyArn=task_role_policy
+    for role in roles:
+        try:
+            # Try to create the role
+            assume_role_policy = json.dumps({
+                "Version": "2012-10-17",
+                "Statement": [{
+                    "Effect": "Allow",
+                    "Principal": {"Service": f"{role['name'].lower().replace('role', 'amazonaws.com')}"}, # Adjust the service name accordingly
+                    "Action": "sts:AssumeRole"
+                }]
+            })
+            response = iam_client.create_role(
+                Path='/',
+                RoleName=role['name'],
+                AssumeRolePolicyDocument=assume_role_policy
             )
-        logger.info("Task Role Create: " + task_role_arn)
-        time.sleep(1)
+            role_arn = response['Role']['Arn']
+            # Attach the policy if specified
+            if role['policy']:
+                iam_client.attach_role_policy(RoleName=role['name'], PolicyArn=role['policy'])
+            logger.info(f"Created role {role['name']} with ARN: {role_arn}")
+        except iam_client.exceptions.EntityAlreadyExistsException:
+            # If the role already exists, get the existing role ARN
+            response = iam_client.get_role(RoleName=role['name'])
+            role_arn = response['Role']['Arn']
+            logger.info(f"Role {role['name']} already exists with ARN: {role_arn}")
 
-        create_ecsagent_role_response = iam_client.create_role(
-            Path='/',
-            RoleName='PetECSAgentRole',
-            AssumeRolePolicyDocument=json.dumps(ecsagent_assume_policy)
-        )
-        ecsagent_role_arn = create_ecsagent_role_response['Role']['Arn']
-        iam_client.attach_role_policy(
-            RoleName='PetECSAgentRole',
-            PolicyArn=ecs_agent_role_policy
-        )
-        logger.info("ECS Agent Role Create: " + ecsagent_role_arn)
-
-        role_arns = {'taskrolearn': task_role_arn, 'ecsrolearn': ecs_role_arn, 'ecsagentrolearn': ecsagent_role_arn}
-        return role_arns
-    except Exception as e:
-        logger.error(e)
-
-        response = iam_client.get_role(
-            RoleName='PetECSServiceRole'
-        )
-        ecs_role_arn = response['Role']['Arn']
-
-        response = iam_client.get_role(
-            RoleName='PetECSTaskRole'
-        )
-        task_role_arn = response['Role']['Arn']
-
-        response = iam_client.get_role(
-            RoleName='PetECSAgentRole'
-        )
-        ecsagent_role_arn = response['Role']['Arn']
-        role_arns = {'taskrolearn': task_role_arn, 'ecsrolearn': ecs_role_arn, 'ecsagentrolearn': ecsagent_role_arn}
-        return role_arns
-
+        role_arns[role['name'].lower()] = role_arn
+    return role_arns
 
 def docker_login_config():
     ecr_client = boto3.client('ecr')
