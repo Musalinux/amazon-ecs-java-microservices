@@ -3,15 +3,15 @@ FROM python:3.10-slim
 
 # Install dependencies using Debian's package manager
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends ca-certificates bash groff less python3-pip && \
+    apt-get install -y --no-install-recommends \
+    ca-certificates \
+    bash \
+    groff \
+    less \
+    python3-pip \
+    curl \
+    unzip && \
     update-ca-certificates
-
-RUN apk list --installed
-RUN printenv
-RUN docker --version
-RUN python3 --version
-RUN pip3 --version
-RUN aws --version
 
 # Install AWS CLI v2 directly from AWS
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
@@ -22,21 +22,19 @@ RUN pip3 install --trusted-host pypi.org --trusted-host files.pythonhosted.org a
 
 # Install additional necessary packages
 RUN apt-get install -y --no-install-recommends \
-        btrfs-progs \
-        e2fsprogs \
-        e2fsprogs-extra \
-        iptables \
-        xfsprogs \
-        xz-utils \
-        openjdk-8-jdk \
-        maven \
-        curl \
-        git \
-        openssh-client \
-        zip \
-        unzip \
-        fonts-dejavu \
-        openssl
+    btrfs-progs \
+    e2fsprogs \
+    e2fsprogs-extra \
+    iptables \
+    xfsprogs \
+    xz-utils \
+    openjdk-8-jdk \
+    maven \
+    git \
+    openssh-client \
+    zip \
+    fonts-dejavu \
+    openssl
 
 # Environment variables for Java and AWS
 ENV JAVA_HOME=/usr/lib/jvm/java-1.8-openjdk
