@@ -20,11 +20,12 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2
 
 RUN pip3 install --trusted-host pypi.org --trusted-host files.pythonhosted.org awscli
 
-# Install additional necessary packages
-RUN apt-get install -y --no-install-recommends \
+# Add the necessary repository for OpenJDK 8 and install additional necessary packages
+RUN echo 'deb http://deb.debian.org/debian stretch-backports main' >> /etc/apt/sources.list && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
     btrfs-progs \
     e2fsprogs \
-    e2fsprogs-extra \
     iptables \
     xfsprogs \
     xz-utils \
