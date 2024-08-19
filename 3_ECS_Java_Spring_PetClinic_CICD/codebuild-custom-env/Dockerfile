@@ -6,6 +6,13 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends ca-certificates bash groff less python3-pip && \
     update-ca-certificates
 
+RUN apk list --installed
+RUN printenv
+RUN docker --version
+RUN python3 --version
+RUN pip3 --version
+RUN aws --version
+
 # Install AWS CLI v2 directly from AWS
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
     unzip awscliv2.zip && \
