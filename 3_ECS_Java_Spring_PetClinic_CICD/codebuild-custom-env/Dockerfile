@@ -11,7 +11,7 @@ RUN apt-get update && \
     python3-pip \
     curl \
     unzip \
-    wget && \  # Add wget here
+    wget && \ 
     update-ca-certificates
 
 # Install AWS CLI v2 directly from AWS
