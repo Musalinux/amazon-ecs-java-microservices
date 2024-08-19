@@ -49,8 +49,8 @@ RUN wget -O /usr/local/bin/dind "https://raw.githubusercontent.com/docker/docker
 
 # Set up Docker in Docker
 RUN set -x \
-    && addgroup -S dockremap \
-    && adduser -S -G dockremap dockremap \
+    && addgroup --system dockremap \
+    && adduser --system --ingroup dockremap dockremap \
     && echo 'dockremap:165536:65536' >> /etc/subuid \
     && echo 'dockremap:165536:65536' >> /etc/subgid
 
