@@ -1,9 +1,9 @@
-# Use a specific version of Alpine for more control over the environment
+# Use a specific version of Debian for more control over the environment
 FROM python:3.10-slim
 
-# Install dependencies
-RUN apk update && \
-    apk add --no-cache ca-certificates bash groff less python3 py3-pip && \
+# Install dependencies using Debian's package manager
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates bash groff less python3-pip && \
     update-ca-certificates
 
 # Install AWS CLI v2 directly from AWS
@@ -11,24 +11,24 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2
     unzip awscliv2.zip && \
     ./aws/install
 
-RUN pip3 install --trusted-host pypi.org --trusted-host files.pythonhosted.org awscli  
+RUN pip3 install --trusted-host pypi.org --trusted-host files.pythonhosted.org awscli
 
 # Install additional necessary packages
-RUN apk add --no-cache \
+RUN apt-get install -y --no-install-recommends \
         btrfs-progs \
         e2fsprogs \
         e2fsprogs-extra \
         iptables \
         xfsprogs \
-        xz \
-        openjdk8 \
+        xz-utils \
+        openjdk-8-jdk \
         maven \
         curl \
         git \
         openssh-client \
         zip \
         unzip \
-        ttf-dejavu \
+        fonts-dejavu \
         openssl
 
 # Environment variables for Java and AWS
