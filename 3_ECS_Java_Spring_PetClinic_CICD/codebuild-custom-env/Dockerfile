@@ -20,22 +20,22 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2
 
 RUN pip3 install --trusted-host pypi.org --trusted-host files.pythonhosted.org awscli
 
-# Add the necessary repository for OpenJDK 8 and install additional necessary packages
-RUN echo 'deb http://deb.debian.org/debian stretch-backports main' >> /etc/apt/sources.list && \
-    apt-get update && \
+# Installing additional necessary packages
+RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     btrfs-progs \
     e2fsprogs \
     iptables \
     xfsprogs \
     xz-utils \
-    openjdk-8-jdk \
+    default-jdk \
     maven \
     git \
     openssh-client \
     zip \
     fonts-dejavu \
-    openssl
+    openssl && \
+    rm -rf /var/lib/apt/lists/*
 
 # Environment variables for Java and AWS
 ENV JAVA_HOME=/usr/lib/jvm/java-1.8-openjdk
